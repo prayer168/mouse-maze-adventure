@@ -1,0 +1,48 @@
+/* ── Confetti overlay — covers the full viewport ─────────────── */
+.confetti-wrap {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;   /* never blocks clicks */
+  overflow: hidden;
+  z-index: 250;           /* above win modal (z-index 200) */
+}
+
+/* ── Individual piece ─────────────────────────────────────────── */
+.confetti-piece {
+  position: absolute;
+  top: -28px;             /* start just above the viewport */
+  will-change: transform, opacity;
+  animation: confetti-fall linear forwards;
+}
+
+/* ── Falling animation ────────────────────────────────────────── */
+/*
+ * --sw = horizontal sway amplitude (set per piece via inline style)
+ * The piece sways left ↔ right while tumbling downward.
+ * Two full 360° rotations over the fall distance.
+ */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0)     translateX(0)                 rotate(0deg);
+    opacity: 1;
+  }
+  20% {
+    transform: translateY(20vh)  translateX(var(--sw))         rotate(144deg);
+  }
+  40% {
+    transform: translateY(40vh)  translateX(0px)               rotate(288deg);
+  }
+  60% {
+    transform: translateY(60vh)  translateX(calc(0px - var(--sw))) rotate(432deg);
+    opacity: 1;
+  }
+  80% {
+    transform: translateY(80vh)  translateX(0px)               rotate(576deg);
+  }
+  100% {
+    transform: translateY(115vh) translateX(var(--sw))         rotate(720deg);
+    opacity: 0;
+  }
+}

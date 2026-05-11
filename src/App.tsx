@@ -14,6 +14,7 @@ import { AlgoPanel } from './components/AlgoPanel';
 import { MazeGrid } from './components/MazeGrid';
 import { DPad } from './components/DPad';
 import { WinModal } from './components/WinModal';
+import { Confetti } from './components/Confetti';
 import { TeacherHUD } from './components/TeacherHUD';
 import { TeacherPanel } from './components/TeacherPanel';
 import { GeneratorPanel } from './components/GeneratorPanel';
@@ -38,6 +39,7 @@ export default function App() {
   const [teacherMode,    setTeacherMode]    = useState(false);
   const [generatedMaze,  setGeneratedMaze]  = useState<MazeLevel | null>(null);
   const [soundEnabled,   setSoundEnabled]   = useState(true);
+  const [showConfetti,   setShowConfetti]   = useState(false);
 
   // Responsive cell size
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -64,34 +66,38 @@ export default function App() {
   const aiActive  = ai.status !== 'idle';
   const aiRunning = ai.status === 'exploring' || ai.status === 'pathing';
 
-  // ── Stable keyboard / D-Pad handler ───────────────────────
+  // ── Stable keyboard / D-Pad handler ───────────────────────────
   const handleMove = useCallback(
     (key: string) => { if (!aiActive) game.move(key); },
     [aiActive, game.move],
   );
   useKeyboard(handleMove);
 
-  // ── Squeak on every successful player move ─────────────────
+  // ── Squeak on every successful player move ─────────────────────
   const prevPosRef = useRef(game.position);
   useEffect(() => {
     const prev = prevPosRef.current;
-    if (
-      !aiActive &&
-      (game.position.row !== prev.row || game.position.col !== prev.col)
-    ) {
+    if (!aiActive && (game.position.row !== prev.row || game.position.col !== prev.col)) {
       sound.playSqueak();
     }
     prevPosRef.current = game.position;
   }, [game.position]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Win: fanfare + stop background music ──────────────────
-  const prevWonRef = useRef(false);
+  // ── Win: confetti + cheer sound + stop music ──────────────────
+  // NOTE: setShowConfetti(true) is called FIRST so an audio error
+  //       can never prevent the confetti from appearing.
   useEffect(() => {
-    if (game.won && !prevWonRef.current) {
-      sound.playWin();
-      music.stop();
+    if (!game.won) {
+      setShowConfetti(false);
+      return;
     }
-    prevWonRef.current = game.won;
+    // Confetti first — guaranteed to show
+    setShowConfetti(true);
+    const confettiId = setTimeout(() => setShowConfetti(false), 6000);
+    // Audio after — wrapped so errors don't abort confetti
+    try { sound.playCheer(); } catch { /* ignore audio errors */ }
+    try { music.stop();      } catch { /* ignore audio errors */ }
+    return () => clearTimeout(confettiId);
   }, [game.won]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const cellSize = computeCellSize(currentLevel.grid[0].length, windowWidth);
@@ -116,7 +122,7 @@ export default function App() {
   const displayPath  = aiActive ? ai.solvePath   : undefined;
   const displayExplo = aiActive ? ai.exploredCells : undefined;
 
-  // ── Handlers ───────────────────────────────────────────────
+  // ── Handlers ───────────────────────────────────────────────────
   function handleAiSolve()  { game.reset(); ai.solve(); }
   function handleReset()    { ai.cancel(); game.reset(); }
   function handleSelectLevel(id: number) { setCurrentLevelId(id); setGeneratedMaze(null); }
@@ -125,6 +131,9 @@ export default function App() {
 
   return (
     <div className="app">
+      {/* ── 彩帶（過關時全螢幕飄落）────────────────────────────── */}
+      <Confetti active={showConfetti} />
+
       {/* ── 標題橫幅 ─────────────────────────────────────────── */}
       <header className="header">
         <h1 className="title">🐭 老鼠迷宮大冒險</h1>
@@ -229,8 +238,6 @@ export default function App() {
         >
           {aiRunning ? '⏹ 停止' : `${algo.icon} 執行 ${algo.name}`}
         </button>
-
-        {/* ── 音效開關 ────────────────────────────────────────── */}
         <button
           className={`btn-sound${soundEnabled ? ' btn-sound--on' : ''}`}
           onClick={() => setSoundEnabled(v => !v)}
@@ -239,15 +246,13 @@ export default function App() {
         >
           {soundEnabled ? '🔊' : '🔇'}
         </button>
-
-        {/* ── 背景音樂開關 ────────────────────────────────────── */}
         <button
           className={`btn-music${music.playing ? ' btn-music--on' : ''}`}
           onClick={music.toggle}
           aria-pressed={music.playing}
           title={music.playing ? '停止背景音樂' : '播放背景音樂'}
         >
-          {music.playing ? '🎵' : '🎵'}
+          🎵
           <span className="btn-music-label">
             {music.playing ? '音樂 ON' : '音樂 OFF'}
           </span>
