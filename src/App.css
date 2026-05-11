@@ -171,6 +171,60 @@ kbd {
   outline-offset: 3px;
 }
 
+/* ── Sound effect toggle ─────────────────────────────────────── */
+.btn-sound {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px solid rgba(90, 62, 27, 0.3);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.14s, transform 0.1s, box-shadow 0.14s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  flex-shrink: 0;
+}
+.btn-sound:hover        { background: #fff; transform: scale(1.1); }
+.btn-sound:active       { transform: scale(0.95); }
+.btn-sound--on          { background: #fff9c4; border-color: #ffc107; box-shadow: 0 2px 0 #e8a000; }
+.btn-sound:focus-visible{ outline: 3px solid #ffc107; outline-offset: 2px; }
+
+/* ── Background music toggle ─────────────────────────────────── */
+.btn-music {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 16px;
+  border-radius: 40px;
+  border: 2px solid rgba(90, 62, 27, 0.3);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  color: #5d4037;
+  transition: background 0.14s, transform 0.1s, box-shadow 0.14s, border-color 0.14s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.btn-music:hover        { background: #fff; transform: translateY(-1px); }
+.btn-music:active       { transform: translateY(1px); }
+.btn-music--on {
+  background: #e8f5e9;
+  border-color: #2e7d32;
+  color: #1b5e20;
+  box-shadow: 0 2px 0 #2e7d32, 0 4px 12px rgba(46,125,50,0.2);
+}
+.btn-music--on:hover    { background: #c8e6c9; }
+.btn-music:focus-visible{ outline: 3px solid #2e7d32; outline-offset: 2px; }
+
+.btn-music-label {
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+}
+
 /* ── Maze wrapper ────────────────────────────────────────────── */
 .game-area {
   display: flex;

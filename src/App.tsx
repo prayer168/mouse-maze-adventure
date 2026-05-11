@@ -1,10 +1,12 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import type { AlgorithmId, MazeLevel } from './types';
 import { MAZES } from './data/mazes';
 import { ALGORITHM_MAP } from './algorithms/index';
 import { useGameState } from './hooks/useGameState';
 import { useKeyboard } from './hooks/useKeyboard';
 import { useAiSolver } from './hooks/useAiSolver';
+import { useSound } from './hooks/useSound';
+import { useBackgroundMusic } from './hooks/useBackgroundMusic';
 import { scoreLevel } from './utils/scoring';
 import { LevelSelector } from './components/LevelSelector';
 import { GameStatus } from './components/GameStatus';
@@ -17,11 +19,6 @@ import { TeacherPanel } from './components/TeacherPanel';
 import { GeneratorPanel } from './components/GeneratorPanel';
 import './App.css';
 
-/**
- * Map grid column count → a comfortable cell pixel size.
- * Accepts the current viewport width so the result stays correct after
- * window resize or device orientation change.
- */
 function computeCellSize(cols: number, viewportWidth: number): number {
   const available = Math.min(viewportWidth, 800) - 48;
   const fromViewport = Math.floor(available / cols);
@@ -40,44 +37,62 @@ export default function App() {
   const [algorithmId,    setAlgorithmId]    = useState<AlgorithmId>('bfs');
   const [teacherMode,    setTeacherMode]    = useState(false);
   const [generatedMaze,  setGeneratedMaze]  = useState<MazeLevel | null>(null);
+  const [soundEnabled,   setSoundEnabled]   = useState(true);
 
-  // Track viewport width so cellSize updates on resize / orientation change.
+  // Responsive cell size
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   useEffect(() => {
-    // requestAnimationFrame batches rapid resize events to one render per frame.
     let rafId = 0;
     const onResize = () => {
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => setWindowWidth(window.innerWidth));
     };
     window.addEventListener('resize', onResize);
-    return () => {
-      window.removeEventListener('resize', onResize);
-      cancelAnimationFrame(rafId);
-    };
+    return () => { window.removeEventListener('resize', onResize); cancelAnimationFrame(rafId); };
   }, []);
 
-  // Resolve active level: generated maze takes priority over preset.
   const currentLevel = useMemo(
     () => generatedMaze ?? (MAZES.find(l => l.id === currentLevelId) ?? MAZES[0]),
     [currentLevelId, generatedMaze],
   );
 
-  const game = useGameState(currentLevel);
-  const ai   = useAiSolver(currentLevel, algorithmId);
+  const game  = useGameState(currentLevel);
+  const ai    = useAiSolver(currentLevel, algorithmId);
+  const sound = useSound(soundEnabled);
+  const music = useBackgroundMusic();
 
   const aiActive  = ai.status !== 'idle';
   const aiRunning = ai.status === 'exploring' || ai.status === 'pathing';
 
-  // Single stable callback for both keyboard and D-Pad.
-  // Previously `aiActive ? () => {} : game.move` created a new function on
-  // every render when AI was active, causing useKeyboard's effect to
-  // remove/re-add the event listener on every render (risking missed keys).
+  // ── Stable keyboard / D-Pad handler ───────────────────────
   const handleMove = useCallback(
     (key: string) => { if (!aiActive) game.move(key); },
     [aiActive, game.move],
   );
   useKeyboard(handleMove);
+
+  // ── Squeak on every successful player move ─────────────────
+  const prevPosRef = useRef(game.position);
+  useEffect(() => {
+    const prev = prevPosRef.current;
+    if (
+      !aiActive &&
+      (game.position.row !== prev.row || game.position.col !== prev.col)
+    ) {
+      sound.playSqueak();
+    }
+    prevPosRef.current = game.position;
+  }, [game.position]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Win: fanfare + stop background music ──────────────────
+  const prevWonRef = useRef(false);
+  useEffect(() => {
+    if (game.won && !prevWonRef.current) {
+      sound.playWin();
+      music.stop();
+    }
+    prevWonRef.current = game.won;
+  }, [game.won]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const cellSize = computeCellSize(currentLevel.grid[0].length, windowWidth);
   const hasNext  = !generatedMaze && currentLevelId < MAZES.length;
@@ -88,13 +103,8 @@ export default function App() {
     [game.won, currentLevel, game.steps],
   );
 
-  // Shortest path via BFS — recomputed only when the level changes (< 1 ms).
   const shortestPathLength = useMemo(() => {
-    const result = ALGORITHM_MAP['bfs'].run(
-      currentLevel.grid,
-      currentLevel.start,
-      currentLevel.end,
-    );
+    const result = ALGORITHM_MAP['bfs'].run(currentLevel.grid, currentLevel.start, currentLevel.end);
     return result.path.length > 0 ? result.path.length - 1 : 0;
   }, [currentLevel]);
 
@@ -106,22 +116,12 @@ export default function App() {
   const displayPath  = aiActive ? ai.solvePath   : undefined;
   const displayExplo = aiActive ? ai.exploredCells : undefined;
 
-  // ── Handlers ──────────────────────────────────────────────────
-  function handleAiSolve() { game.reset(); ai.solve(); }
-  function handleReset()   { ai.cancel(); game.reset(); }
-
-  function handleSelectLevel(id: number) {
-    setCurrentLevelId(id);
-    setGeneratedMaze(null);
-  }
-
-  function handleGenerate(maze: MazeLevel) {
-    setGeneratedMaze(maze);
-  }
-
-  function handleNext() {
-    if (hasNext) setCurrentLevelId(id => id + 1);
-  }
+  // ── Handlers ───────────────────────────────────────────────
+  function handleAiSolve()  { game.reset(); ai.solve(); }
+  function handleReset()    { ai.cancel(); game.reset(); }
+  function handleSelectLevel(id: number) { setCurrentLevelId(id); setGeneratedMaze(null); }
+  function handleGenerate(maze: MazeLevel) { setGeneratedMaze(maze); }
+  function handleNext()     { if (hasNext) setCurrentLevelId(id => id + 1); }
 
   return (
     <div className="app">
@@ -142,7 +142,6 @@ export default function App() {
       </button>
 
       {/* ── 預設關卡選擇 ──────────────────────────────────────── */}
-      {/* currentId=0 when generated maze active → no preset button highlighted */}
       <LevelSelector
         levels={MAZES}
         currentId={generatedMaze ? 0 : currentLevelId}
@@ -150,10 +149,7 @@ export default function App() {
       />
 
       {/* ── 隨機迷宮生成器 ────────────────────────────────────── */}
-      <GeneratorPanel
-        onGenerate={handleGenerate}
-        isActive={generatedMaze !== null}
-      />
+      <GeneratorPanel onGenerate={handleGenerate} isActive={generatedMaze !== null} />
 
       {/* ── 分數 / 計時列 ─────────────────────────────────────── */}
       <GameStatus
@@ -164,7 +160,7 @@ export default function App() {
         started={game.started}
       />
 
-      {/* ── 老師 HUD（即時資料）──────────────────────────────── */}
+      {/* ── 老師 HUD ──────────────────────────────────────────── */}
       {teacherMode && (
         <TeacherHUD
           playerPos={displayPos}
@@ -181,7 +177,7 @@ export default function App() {
         <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移動
       </p>
 
-      {/* ── 演算法選擇器 + 說明 + 統計 ───────────────────────── */}
+      {/* ── 演算法選擇器 ──────────────────────────────────────── */}
       <AlgoPanel
         selectedId={algorithmId}
         onSelect={id => { setAlgorithmId(id); ai.cancel(); }}
@@ -206,24 +202,13 @@ export default function App() {
       {aiActive && (
         <div className="ai-status" aria-live="polite">
           {ai.status === 'exploring' && (
-            <>
-              <span className="ai-label">🔍 探索中…</span>
-              <span className="ai-steps">探索格子中（{algo.name}）</span>
-            </>
+            <><span className="ai-label">🔍 探索中…</span><span className="ai-steps">探索格子中（{algo.name}）</span></>
           )}
           {ai.status === 'pathing' && (
-            <>
-              <span className="ai-label">🐭 行走路徑…</span>
-              <span className="ai-steps">第 {ai.stepIndex} / {ai.totalSteps} 步</span>
-            </>
+            <><span className="ai-label">🐭 行走路徑…</span><span className="ai-steps">第 {ai.stepIndex} / {ai.totalSteps} 步</span></>
           )}
           {ai.status === 'done' && (
-            <>
-              <span className="ai-label">✅ 完成！</span>
-              <span className="ai-steps">
-                {algo.name}：探索 {ai.stats?.exploredCount} 格 → {ai.totalSteps} 步
-              </span>
-            </>
+            <><span className="ai-label">✅ 完成！</span><span className="ai-steps">{algo.name}：探索 {ai.stats?.exploredCount} 格 → {ai.totalSteps} 步</span></>
           )}
         </div>
       )}
@@ -244,9 +229,32 @@ export default function App() {
         >
           {aiRunning ? '⏹ 停止' : `${algo.icon} 執行 ${algo.name}`}
         </button>
+
+        {/* ── 音效開關 ────────────────────────────────────────── */}
+        <button
+          className={`btn-sound${soundEnabled ? ' btn-sound--on' : ''}`}
+          onClick={() => setSoundEnabled(v => !v)}
+          aria-pressed={soundEnabled}
+          title={soundEnabled ? '關閉音效' : '開啟音效'}
+        >
+          {soundEnabled ? '🔊' : '🔇'}
+        </button>
+
+        {/* ── 背景音樂開關 ────────────────────────────────────── */}
+        <button
+          className={`btn-music${music.playing ? ' btn-music--on' : ''}`}
+          onClick={music.toggle}
+          aria-pressed={music.playing}
+          title={music.playing ? '停止背景音樂' : '播放背景音樂'}
+        >
+          {music.playing ? '🎵' : '🎵'}
+          <span className="btn-music-label">
+            {music.playing ? '音樂 ON' : '音樂 OFF'}
+          </span>
+        </button>
       </div>
 
-      {/* ── 學習角落（老師模式專用）──────────────────────────── */}
+      {/* ── 學習角落（老師模式）──────────────────────────────── */}
       {teacherMode && <TeacherPanel />}
 
       {/* ── 過關視窗 ──────────────────────────────────────────── */}
