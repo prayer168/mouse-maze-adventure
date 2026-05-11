@@ -1,0 +1,83 @@
+.level-selector {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 720px;
+  width: 100%;
+}
+
+.level-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 16px 9px;
+  border: 2.5px solid rgba(200, 180, 140, 0.35);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.62);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.14s, border-color 0.14s, transform 0.1s, box-shadow 0.14s;
+  min-width: 80px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+}
+
+.level-btn:hover {
+  background: rgba(255, 255, 255, 0.92);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.level-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.level-btn:focus-visible {
+  outline: 3px solid #ffc107;
+  outline-offset: 2px;
+}
+
+/* Active states — colour-coded per difficulty */
+.level-btn.active.diff-beginner {
+  border-color: #2e7d32; background: #e8f5e9;
+  box-shadow: 0 3px 0 #2e7d32, 0 5px 14px rgba(46, 125, 50, 0.2);
+}
+.level-btn.active.diff-easy {
+  border-color: #1565c0; background: #e3f2fd;
+  box-shadow: 0 3px 0 #1565c0, 0 5px 14px rgba(21, 101, 192, 0.2);
+}
+.level-btn.active.diff-medium {
+  border-color: #e65100; background: #fff3e0;
+  box-shadow: 0 3px 0 #e65100, 0 5px 14px rgba(230, 81, 0, 0.2);
+}
+.level-btn.active.diff-advanced {
+  border-color: #b71c1c; background: #ffebee;
+  box-shadow: 0 3px 0 #b71c1c, 0 5px 14px rgba(183, 28, 28, 0.2);
+}
+.level-btn.active.diff-expert {
+  border-color: #4a148c; background: #f3e5f5;
+  box-shadow: 0 3px 0 #4a148c, 0 5px 14px rgba(74, 20, 140, 0.2);
+}
+
+.level-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  transition: transform 0.15s;
+}
+.level-btn:hover .level-icon { transform: scale(1.15); }
+
+.level-name {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #2c1800;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .level-btn  { min-width: 62px; padding: 8px 10px 7px; }
+  .level-icon { font-size: 1.25rem; }
+  .level-name { font-size: 0.7rem; }
+}

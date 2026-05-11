@@ -1,0 +1,188 @@
+.algo-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 680px;
+}
+
+/* ── Dropdown ───────────────────────────────────────────────── */
+.algo-select-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.algo-select-label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #5d4037;
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.algo-select {
+  flex: 1;
+  padding: 9px 34px 9px 14px;
+  border: 2.5px solid rgba(141, 110, 99, 0.3);
+  border-radius: 40px;
+  background: rgba(255, 255, 255, 0.75);
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: #2c1800;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%235d4037' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  transition: border-color 0.14s, box-shadow 0.14s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+}
+
+.algo-select:focus {
+  outline: none;
+  border-color: var(--algo-color, #3b82f6);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--algo-color, #3b82f6) 20%, transparent);
+}
+
+.algo-select:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Explanation card ───────────────────────────────────────── */
+.algo-card {
+  background: rgba(255, 255, 255, 0.72);
+  border: 2.5px solid var(--algo-color, #3b82f6);
+  border-radius: 18px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.25s;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+}
+
+.algo-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.algo-card-icon { font-size: 1.8rem; line-height: 1; }
+
+.algo-card-name {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #2c1800;
+  margin-right: 8px;
+}
+
+.algo-card-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 40px;
+  letter-spacing: 0.03em;
+}
+
+.badge-optimal     { background: #e8f5e9; color: #1b5e20; }
+.badge-not-optimal { background: #ffebee; color: #b71c1c; }
+
+.algo-card-text {
+  font-size: 0.88rem;
+  color: #4a3010;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.algo-card-fact {
+  font-size: 0.82rem;
+  color: #8d6e63;
+  font-style: italic;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 10px;
+  padding: 7px 12px;
+  margin: 0;
+}
+
+/* ── Stats row ──────────────────────────────────────────────── */
+.algo-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 2.5px solid var(--algo-color, #3b82f6);
+  border-radius: 18px;
+  padding: 12px 18px;
+  animation: stat-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.algo-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.algo-stat-icon  { font-size: 1.15rem; }
+
+.algo-stat-value {
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: #2c1800;
+  font-variant-numeric: tabular-nums;
+}
+
+.algo-stat-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8d6e63;
+}
+
+.algo-stat-divider {
+  width: 1.5px;
+  height: 38px;
+  background: rgba(141, 110, 99, 0.22);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Legend ─────────────────────────────────────────────────── */
+.algo-legend {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.78rem;
+  color: #5d4037;
+  font-weight: 700;
+}
+
+.legend-swatch {
+  width: 20px;
+  height: 14px;
+  border-radius: 5px;
+  display: inline-block;
+}
+
+.swatch-explored { background: #c5cae9; }
+
+/* ── Animation ──────────────────────────────────────────────── */
+@keyframes stat-pop {
+  from { transform: scale(0.88); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+@media (max-width: 480px) {
+  .algo-select    { font-size: 0.8rem; }
+  .algo-card-text { font-size: 0.82rem; }
+  .algo-stat-value{ font-size: 1.2rem; }
+}

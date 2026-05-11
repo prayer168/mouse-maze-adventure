@@ -1,0 +1,143 @@
+/* ── Panel container ─────────────────────────────────────────── */
+.teacher-panel {
+  width: 100%;
+  max-width: 680px;
+  background: #fffef5;
+  border: 2.5px solid #ffc107;
+  border-radius: 20px;
+  padding: 20px 22px 18px;
+  box-shadow:
+    0 4px 0 #e8a000,
+    0 6px 24px rgba(255, 193, 7, 0.22);
+  animation: panel-in 0.35s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+@keyframes panel-in {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.teacher-panel-header {
+  margin-bottom: 14px;
+}
+
+.teacher-panel-title {
+  font-size: 1.18rem;
+  font-weight: 900;
+  color: #e05800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.teacher-panel-intro {
+  font-size: 0.81rem;
+  color: #8d6e63;
+  font-weight: 600;
+}
+
+/* ── Note list ───────────────────────────────────────────────── */
+.teacher-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Individual note card (using native <details>) ───────────── */
+.teacher-note {
+  background: #fff;
+  border: 1.5px solid rgba(255, 193, 7, 0.35);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.18s;
+}
+
+.teacher-note[open] {
+  border-color: #ffc107;
+}
+
+/* ── Summary row (the clickable tab) ────────────────────────── */
+.teacher-note-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;          /* hide default triangle in Firefox */
+  font-weight: 700;
+  color: #2c1800;
+  transition: background 0.14s;
+}
+
+/* Hide browser's default disclosure triangle */
+.teacher-note-summary::-webkit-details-marker { display: none; }
+.teacher-note-summary::marker               { display: none; }
+
+/* Animated chevron via ::after */
+.teacher-note-summary::after {
+  content: '▸';
+  margin-left: auto;
+  color: #ffc107;
+  font-size: 1rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.teacher-note[open] .teacher-note-summary::after {
+  transform: rotate(90deg);
+}
+
+.teacher-note-summary:hover {
+  background: #fffde7;
+}
+
+.teacher-note-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.teacher-note-heading {
+  font-size: 0.91rem;
+  font-weight: 800;
+  color: #2c1800;
+}
+
+/* ── Expanded body ───────────────────────────────────────────── */
+.teacher-note-body {
+  padding: 4px 16px 14px;
+  border-top: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.teacher-note-text {
+  font-size: 0.88rem;
+  color: #4a3010;
+  line-height: 1.7;
+  white-space: pre-line;   /* preserves \n bullet points from the data file */
+  margin: 10px 0 0;
+}
+
+/* Fun-fact callout */
+.teacher-note-fact {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 0.82rem;
+  font-style: italic;
+  color: #7a5c3a;
+  background: #fffde7;
+  border: 1px solid rgba(255, 193, 7, 0.35);
+  border-radius: 10px;
+  padding: 9px 12px;
+  margin-top: 12px;
+  line-height: 1.55;
+}
+
+@media (max-width: 480px) {
+  .teacher-panel          { padding: 16px 14px 14px; }
+  .teacher-note-text      { font-size: 0.83rem; }
+  .teacher-panel-title    { font-size: 1.05rem; }
+}
