@@ -49,9 +49,13 @@ jobs:
       - name: Build
         run: npm run build
 
-      # 5. Configure the Pages deployment environment
+      # 5. Configure the Pages deployment environment.
+      #    enablement: true → automatically switches Pages source to
+      #    "GitHub Actions" if it hasn't been set in the repo settings yet.
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       # 6. Upload the dist/ folder as the Pages artifact
       - name: Upload artifact
