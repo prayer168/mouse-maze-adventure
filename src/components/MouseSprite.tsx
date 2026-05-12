@@ -22,8 +22,8 @@ interface Props {
 const DIR_STYLE: Record<Direction, React.CSSProperties> = {
   left:  { transform: 'none'            },
   right: { transform: 'scaleX(-1)'      },
-  up:    { transform: 'rotate(-90deg)'  },
-  down:  { transform: 'rotate(90deg)'   },
+  up:    { transform: 'rotate(90deg)'   }, // tail points up   → head points down (running up head-first toward viewer)
+  down:  { transform: 'rotate(-90deg)'  }, // tail points down → head points up   (mouse descends tail-first)
 };
 
 export function MouseSprite({ isRunning, direction, size }: Props) {
