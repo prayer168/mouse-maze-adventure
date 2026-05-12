@@ -1,6 +1,14 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import type { MazeGrid as MazeGridType, Position } from '../types';
+import { MouseSprite } from './MouseSprite';
 import './MazeGrid.css';
+
+/**
+ * Cell-to-cell slide duration (ms).
+ * Must be ≤ HOLD_INTERVAL_MS in useKeyboard.ts so each transition
+ * completes before the next move fires → seamlessly chained running.
+ */
+const MOVE_MS = 72;
 
 interface Props {
   grid: MazeGridType;
@@ -12,19 +20,34 @@ interface Props {
   pathColor?: string;
 }
 
-export function MazeGrid({ grid, playerPos, end, cellSize, exploredCells, solvePath, pathColor = '#3b82f6' }: Props) {
-  const prevPosRef = useRef(playerPos);
-  const [teleport, setTeleport] = useState(false);
+export function MazeGrid({
+  grid, playerPos, end, cellSize,
+  exploredCells, solvePath, pathColor = '#3b82f6',
+}: Props) {
+  const prevPosRef  = useRef(playerPos);
+  const [teleport,    setTeleport]    = useState(false);
+  const [facingRight, setFacingRight] = useState(false);
+  const [isRunning,   setIsRunning]   = useState(false);
+  const runTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // useLayoutEffect fires synchronously after DOM mutations but BEFORE the
-  // browser paints. This means when a level resets and playerPos jumps many
-  // cells (dist > 3), we disable the CSS transition in the same frame,
-  // so the mouse snaps instantly with no visible slide animation.
-  // With useEffect (after paint) the mouse would briefly animate then snap.
+  // Fires before paint → no visual flash on teleport
   useLayoutEffect(() => {
     const prev = prevPosRef.current;
-    const dist  = Math.abs(playerPos.row - prev.row) + Math.abs(playerPos.col - prev.col);
-    setTeleport(dist > 3); // level reset / AI reset → skip slide transition
+    const dr   = playerPos.row - prev.row;
+    const dc   = playerPos.col - prev.col;
+    const dist = Math.abs(dr) + Math.abs(dc);
+
+    setTeleport(dist > 3);
+
+    if (dist === 1) {
+      if (dc > 0) setFacingRight(true);
+      if (dc < 0) setFacingRight(false);
+
+      setIsRunning(true);
+      if (runTimer.current !== null) clearTimeout(runTimer.current);
+      runTimer.current = setTimeout(() => setIsRunning(false), MOVE_MS + 50);
+    }
+
     prevPosRef.current = playerPos;
   }, [playerPos]);
 
@@ -36,6 +59,7 @@ export function MazeGrid({ grid, playerPos, end, cellSize, exploredCells, solveP
       style={{
         '--cell-size': `${cellSize}px`,
         '--path-color': pathColor,
+        '--move-ms':   `${MOVE_MS}ms`,
       } as React.CSSProperties}
     >
       {grid.map((row, r) => (
@@ -47,7 +71,7 @@ export function MazeGrid({ grid, playerPos, end, cellSize, exploredCells, solveP
             const isOnPath   = !isWall && solvePath?.has(key);
             const isExplored = !isWall && !isOnPath && exploredCells?.has(key);
 
-            const className = [
+            const cls = [
               'cell',
               isWall     ? 'wall'          : 'path',
               isExplored ? 'explored-cell' : '',
@@ -56,12 +80,8 @@ export function MazeGrid({ grid, playerPos, end, cellSize, exploredCells, solveP
             ].filter(Boolean).join(' ');
 
             return (
-              <div
-                key={c}
-                className={className}
-                role="gridcell"
-                aria-label={isGoal ? 'cheese goal' : undefined}
-              >
+              <div key={c} className={cls} role="gridcell"
+                   aria-label={isGoal ? 'cheese goal' : undefined}>
                 {isGoal && <span className="sprite cheese-sprite">🧀</span>}
               </div>
             );
@@ -69,25 +89,22 @@ export function MazeGrid({ grid, playerPos, end, cellSize, exploredCells, solveP
         </div>
       ))}
 
-      {/* Smooth-sliding mouse — absolutely positioned over the grid */}
+      {/* ── Mouse overlay ───────────────────────────────────── */}
       <div
         className="mouse-overlay"
         aria-label="mouse player"
         style={{
           width:     cellSize,
           height:    cellSize,
-          fontSize:  cellSize * 0.68,
           transform: `translate(${playerPos.col * cellSize}px, ${playerPos.row * cellSize}px)`,
-          transition: teleport ? 'none' : undefined,
+          transition: teleport ? 'none' : `transform var(--move-ms) linear`,
         }}
       >
-        {/* key forces remount → replays bounce-in animation on each move */}
-        <span
-          key={`${playerPos.row}-${playerPos.col}`}
-          className="mouse-emoji"
-        >
-          🐭
-        </span>
+        <MouseSprite
+          isRunning={isRunning}
+          facingRight={facingRight}
+          size={cellSize}
+        />
       </div>
     </div>
   );

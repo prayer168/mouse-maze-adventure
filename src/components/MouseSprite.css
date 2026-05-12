@@ -1,0 +1,94 @@
+/*
+ * MouseSprite animations
+ * Each animated group uses transform-box:fill-box so transform-origin
+ * is relative to that element's own bounding box (not the SVG viewport).
+ */
+
+/* ── Shared setup ────────────────────────────────────────────── */
+.ms-legs-front,
+.ms-legs-back,
+.ms-body,
+.ms-tail {
+  transform-box:    fill-box;
+  transform-origin: center top;
+}
+
+.ms-tail {
+  transform-origin: left center;  /* pivot from where it meets the body */
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   IDLE — gentle breathing + slow tail sway
+   ═══════════════════════════════════════════════════════════════ */
+
+.mouse-svg .ms-body {
+  animation: ms-breathe 2s ease-in-out infinite;
+}
+
+@keyframes ms-breathe {
+  0%, 100% { transform: scaleY(1)    translateY(0); }
+  50%       { transform: scaleY(1.05) translateY(-1.5px); }
+}
+
+.mouse-svg .ms-tail {
+  animation: ms-tail-idle 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes ms-tail-idle {
+  from { transform: rotate(-8deg); }
+  to   { transform: rotate(8deg);  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RUNNING — alternating legs, body bounce, fast tail wag
+   ═══════════════════════════════════════════════════════════════ */
+
+/*
+ * Front and back legs are half-cycle out of phase so they alternate:
+ *   front UP  → back DOWN  (quadruped gallop)
+ *   front DOWN → back UP
+ */
+
+.mouse-svg--run .ms-legs-front {
+  animation: ms-legs-a 0.20s linear infinite;
+}
+
+.mouse-svg--run .ms-legs-back {
+  animation: ms-legs-b 0.20s linear infinite;
+}
+
+@keyframes ms-legs-a {
+  0%   { transform: translateY(0)    scaleY(1);    }
+  25%  { transform: translateY(-9px) scaleY(0.70); }  /* swing forward/up */
+  50%  { transform: translateY(3px)  scaleY(1.12); }  /* push down        */
+  75%  { transform: translateY(0)    scaleY(1);    }
+  100% { transform: translateY(0)    scaleY(1);    }
+}
+
+@keyframes ms-legs-b {        /* opposite phase */
+  0%   { transform: translateY(0)    scaleY(1);    }
+  25%  { transform: translateY(3px)  scaleY(1.12); }
+  50%  { transform: translateY(-9px) scaleY(0.70); }
+  75%  { transform: translateY(0)    scaleY(1);    }
+  100% { transform: translateY(0)    scaleY(1);    }
+}
+
+/* Body bounces once per full stride (half the leg period) */
+.mouse-svg--run .ms-body {
+  animation: ms-body-run 0.20s linear infinite;
+}
+
+@keyframes ms-body-run {
+  0%, 50%, 100% { transform: translateY(0);    }
+  25%, 75%      { transform: translateY(-4px); }
+}
+
+/* Tail wags faster while running */
+.mouse-svg--run .ms-tail {
+  animation: ms-tail-run 0.20s linear infinite alternate;
+}
+
+@keyframes ms-tail-run {
+  from { transform: rotate(-18deg); }
+  to   { transform: rotate(22deg);  }
+}
