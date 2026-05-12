@@ -2,7 +2,15 @@
  * MouseSprite animations
  * Each animated group uses transform-box:fill-box so transform-origin
  * is relative to that element's own bounding box (not the SVG viewport).
+ *
+ * Direction rotation is applied to the <svg> element via inline style.
+ * A short CSS transition smooths the turn so it doesn't snap.
  */
+
+/* Smooth direction change (left ↔ right ↔ up ↔ down) */
+.mouse-svg {
+  transition: transform 0.08s ease;
+}
 
 /* ── Shared setup ────────────────────────────────────────────── */
 .ms-legs-front,

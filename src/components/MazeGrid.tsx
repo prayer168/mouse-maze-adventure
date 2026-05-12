@@ -3,12 +3,10 @@ import type { MazeGrid as MazeGridType, Position } from '../types';
 import { MouseSprite } from './MouseSprite';
 import './MazeGrid.css';
 
-/**
- * Cell-to-cell slide duration (ms).
- * Must be ≤ HOLD_INTERVAL_MS in useKeyboard.ts so each transition
- * completes before the next move fires → seamlessly chained running.
- */
-const MOVE_MS = 72;
+/** Cell-to-cell slide duration (ms) — keep slightly < HOLD_INTERVAL_MS */
+const MOVE_MS = 68;
+
+export type Direction = 'left' | 'right' | 'up' | 'down';
 
 interface Props {
   grid: MazeGridType;
@@ -25,12 +23,11 @@ export function MazeGrid({
   exploredCells, solvePath, pathColor = '#3b82f6',
 }: Props) {
   const prevPosRef  = useRef(playerPos);
-  const [teleport,    setTeleport]    = useState(false);
-  const [facingRight, setFacingRight] = useState(false);
-  const [isRunning,   setIsRunning]   = useState(false);
+  const [teleport,   setTeleport]   = useState(false);
+  const [direction,  setDirection]  = useState<Direction>('right');
+  const [isRunning,  setIsRunning]  = useState(false);
   const runTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Fires before paint → no visual flash on teleport
   useLayoutEffect(() => {
     const prev = prevPosRef.current;
     const dr   = playerPos.row - prev.row;
@@ -40,12 +37,15 @@ export function MazeGrid({
     setTeleport(dist > 3);
 
     if (dist === 1) {
-      if (dc > 0) setFacingRight(true);
-      if (dc < 0) setFacingRight(false);
+      // Update direction for all 4 axes
+      if      (dc > 0) setDirection('right');
+      else if (dc < 0) setDirection('left');
+      else if (dr < 0) setDirection('up');
+      else             setDirection('down');
 
       setIsRunning(true);
       if (runTimer.current !== null) clearTimeout(runTimer.current);
-      runTimer.current = setTimeout(() => setIsRunning(false), MOVE_MS + 50);
+      runTimer.current = setTimeout(() => setIsRunning(false), MOVE_MS + 55);
     }
 
     prevPosRef.current = playerPos;
@@ -89,7 +89,7 @@ export function MazeGrid({
         </div>
       ))}
 
-      {/* ── Mouse overlay ───────────────────────────────────── */}
+      {/* ── Mouse overlay ─────────────────────────────────────── */}
       <div
         className="mouse-overlay"
         aria-label="mouse player"
@@ -102,7 +102,7 @@ export function MazeGrid({
       >
         <MouseSprite
           isRunning={isRunning}
-          facingRight={facingRight}
+          direction={direction}
           size={cellSize}
         />
       </div>
