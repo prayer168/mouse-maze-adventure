@@ -2,6 +2,8 @@
 
 本文件說明此專案涵蓋的**學生學習技能**、**教師教學技能**，以及開發本專案所使用的**程式技能**。
 
+> 最後更新：2026-05-12 ── 新增音效、背景音樂、彩帶慶祝功能
+
 ---
 
 ## 🎓 學生學習技能
@@ -80,11 +82,13 @@
 ### React 設計模式
 | 模式 | 說明 |
 |------|------|
-| Custom Hook | `useGameState`、`useAiSolver`、`useKeyboard` 分離邏輯 |
+| Custom Hook | `useGameState`、`useAiSolver`、`useKeyboard`、`useSound`、`useBackgroundMusic` 分離邏輯 |
 | Ref + State 搭配 | 用 `useRef` 同步追蹤位置，避免 StrictMode 雙重呼叫 |
 | `useLayoutEffect` | 在瀏覽器繪製前同步更新，防止動畫閃爍 |
 | `useCallback` 穩定化 | 防止鍵盤事件監聽器在每次渲染時重新註冊 |
 | RAF 節流 | `requestAnimationFrame` 批次處理視窗縮放事件 |
+| Web Audio API | 用程式合成音效，不依賴任何外部音訊檔案 |
+| CSS 複合動畫 | 父子元素各自獨立動畫（飄落 + 翻轉）組合出真實彩帶效果 |
 
 ### 部署
 | 項目 | 說明 |
@@ -92,6 +96,7 @@
 | GitHub Actions | push to `main` → 自動 build + deploy |
 | Vite base path | `GITHUB_ACTIONS` 環境變數動態切換 `base` |
 | Pages artifact | `actions/upload-pages-artifact@v3` 上傳 `dist/` |
+| Pages 模式切換 | 首次須透過 `gh api PUT /pages` 將 build_type 從 legacy 改為 workflow |
 
 ---
 
@@ -100,16 +105,20 @@
 ```
 src/
 ├── algorithms/
-│   ├── bfs.ts          ← BFS 最短路徑
-│   ├── dfs.ts          ← DFS 深度探索
-│   ├── astar.ts        ← A★ 啟發式搜尋
-│   └── generateMaze.ts ← 遞迴回溯迷宮生成
+│   ├── bfs.ts              ← BFS 最短路徑
+│   ├── dfs.ts              ← DFS 深度探索
+│   ├── astar.ts            ← A★ 啟發式搜尋
+│   └── generateMaze.ts     ← 遞迴回溯迷宮生成
+├── components/
+│   └── Confetti.tsx/css    ← 120 個長條彩帶，父子元素複合動畫
 ├── hooks/
-│   ├── useGameState.ts ← 玩家移動、計步、計時、勝利判定
-│   ├── useAiSolver.ts  ← AI 兩階段動畫（探索 → 走路徑）
-│   └── useKeyboard.ts  ← 鍵盤事件綁定
+│   ├── useGameState.ts     ← 玩家移動、計步、計時、勝利判定
+│   ├── useAiSolver.ts      ← AI 兩階段動畫（探索 → 走路徑）
+│   ├── useKeyboard.ts      ← 鍵盤事件綁定
+│   ├── useSound.ts         ← 移動音效（squeak）、過關歡呼（cheer）
+│   └── useBackgroundMusic.ts ← 8 秒循環旋律，look-ahead 排程器
 └── data/
-    └── teachingNotes.ts ← 老師可直接修改的學習角落文字
+    └── teachingNotes.ts    ← 老師可直接修改的學習角落文字
 ```
 
 ---
