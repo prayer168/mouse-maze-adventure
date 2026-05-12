@@ -1,48 +1,50 @@
-/* ── Confetti overlay — covers the full viewport ─────────────── */
+/* ── Full-screen overlay ─────────────────────────────────────── */
 .confetti-wrap {
   position: fixed;
   inset: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;   /* never blocks clicks */
+  pointer-events: none;
   overflow: hidden;
   z-index: 250;           /* above win modal (z-index 200) */
+  /* Auto-fade after 6 s — all pieces have fallen off-screen by then */
+  animation: confetti-wrap-fade 0.6s 6s forwards;
 }
 
-/* ── Individual piece ─────────────────────────────────────────── */
-.confetti-piece {
+@keyframes confetti-wrap-fade {
+  to { opacity: 0; }
+}
+
+/* ── Outer div — handles the falling + swaying path ─────────── */
+.confetti-outer {
   position: absolute;
-  top: -28px;             /* start just above the viewport */
-  will-change: transform, opacity;
+  top: -55px;             /* start above the viewport */
+  will-change: transform;
   animation: confetti-fall linear forwards;
 }
 
-/* ── Falling animation ────────────────────────────────────────── */
-/*
- * --sw = horizontal sway amplitude (set per piece via inline style)
- * The piece sways left ↔ right while tumbling downward.
- * Two full 360° rotations over the fall distance.
- */
+/* ── Inner div — the visible strip, flutters like real paper ── */
+.confetti-inner {
+  border-radius: 2px;
+  transform-origin: center center;
+  animation: confetti-flutter ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+/* ── Falling path: sways left ↔ right ───────────────────────── */
+/* --sw = horizontal sway amplitude (set per piece via inline style) */
 @keyframes confetti-fall {
-  0% {
-    transform: translateY(0)     translateX(0)                 rotate(0deg);
-    opacity: 1;
-  }
-  20% {
-    transform: translateY(20vh)  translateX(var(--sw))         rotate(144deg);
-  }
-  40% {
-    transform: translateY(40vh)  translateX(0px)               rotate(288deg);
-  }
-  60% {
-    transform: translateY(60vh)  translateX(calc(0px - var(--sw))) rotate(432deg);
-    opacity: 1;
-  }
-  80% {
-    transform: translateY(80vh)  translateX(0px)               rotate(576deg);
-  }
-  100% {
-    transform: translateY(115vh) translateX(var(--sw))         rotate(720deg);
-    opacity: 0;
-  }
+  0%   { transform: translateX(0)                      translateY(0);    opacity: 1; }
+  20%  { transform: translateX(var(--sw))              translateY(20vh);             }
+  40%  { transform: translateX(0px)                    translateY(40vh);             }
+  60%  { transform: translateX(calc(0px - var(--sw)))  translateY(60vh); opacity: 1; }
+  80%  { transform: translateX(0px)                    translateY(82vh);             }
+  100% { transform: translateX(var(--sw))              translateY(108vh); opacity: 0;}
+}
+
+/* ── Flutter: strip rotates + thins to simulate 3-D tumble ─── */
+/* --r0, --r1 = start/end rotation angles (set per piece)        */
+/* scaleX 1 → 0.06 makes the strip look like it's rotating      */
+/* edge-on, exactly like a real piece of confetti falling        */
+@keyframes confetti-flutter {
+  0%   { transform: rotate(var(--r0)) scaleX(1);    }
+  100% { transform: rotate(var(--r1)) scaleX(0.06); }
 }

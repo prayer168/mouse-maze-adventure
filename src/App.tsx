@@ -39,7 +39,6 @@ export default function App() {
   const [teacherMode,    setTeacherMode]    = useState(false);
   const [generatedMaze,  setGeneratedMaze]  = useState<MazeLevel | null>(null);
   const [soundEnabled,   setSoundEnabled]   = useState(true);
-  const [showConfetti,   setShowConfetti]   = useState(false);
 
   // Responsive cell size
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -83,21 +82,12 @@ export default function App() {
     prevPosRef.current = game.position;
   }, [game.position]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Win: confetti + cheer sound + stop music ──────────────────
-  // NOTE: setShowConfetti(true) is called FIRST so an audio error
-  //       can never prevent the confetti from appearing.
+  // ── Win: cheer sound + stop music ─────────────────────────────
+  // Confetti visibility is driven directly by game.won (no extra state).
   useEffect(() => {
-    if (!game.won) {
-      setShowConfetti(false);
-      return;
-    }
-    // Confetti first — guaranteed to show
-    setShowConfetti(true);
-    const confettiId = setTimeout(() => setShowConfetti(false), 6000);
-    // Audio after — wrapped so errors don't abort confetti
+    if (!game.won) return;
     try { sound.playCheer(); } catch { /* ignore audio errors */ }
     try { music.stop();      } catch { /* ignore audio errors */ }
-    return () => clearTimeout(confettiId);
   }, [game.won]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const cellSize = computeCellSize(currentLevel.grid[0].length, windowWidth);
@@ -131,8 +121,8 @@ export default function App() {
 
   return (
     <div className="app">
-      {/* ── 彩帶（過關時全螢幕飄落）────────────────────────────── */}
-      <Confetti active={showConfetti} />
+      {/* ── 彩帶：game.won=true 即顯示，reset 後立即消失 ────────── */}
+      <Confetti active={game.won} />
 
       {/* ── 標題橫幅 ─────────────────────────────────────────── */}
       <header className="header">
